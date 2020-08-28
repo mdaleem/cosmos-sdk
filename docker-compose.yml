@@ -8,12 +8,11 @@ services:
       - "26656-26657:26656-26657"
       - "1317:1317"
       - "9090:9090"
-    command: ["simd", "start"]
     environment:
       - ID=0
       - LOG=${LOG:-simd.log}
     volumes:
-      - ./build/node0/simd/:/root/.simapp:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.2
@@ -25,12 +24,11 @@ services:
       - "26666-26667:26656-26657"
       - "1318:1317"
       - "9091:9090"
-    command: ["simd", "start"]
     environment:
       - ID=1
       - LOG=${LOG:-simd.log}
     volumes:
-      - ./build/node1/simd/:/root/.simapp:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.3
@@ -41,13 +39,12 @@ services:
     environment:
       - ID=2
       - LOG=${LOG:-simd.log}
-    command: ["simd", "start"]
     ports:
       - "26676-26677:26656-26657"
       - "1319:1317"
       - "9092:9090"
     volumes:
-      - ./build/node2/simd/:/root/.simapp:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.4
@@ -58,13 +55,12 @@ services:
     environment:
       - ID=3
       - LOG=${LOG:-simd.log}
-    command: ["simd", "start"]
     ports:
       - "26686-26687:26656-26657"
       - "1320:1317"
       - "9093:9090"
     volumes:
-      - ./build/node3/simd/:/root/.simapp:Z
+      - ./build:/simd:Z
     networks:
       localnet:
         ipv4_address: 192.168.10.5
