@@ -218,7 +218,7 @@ jobs:
             .sum
       - name: build image
         run: |
-          make build-docker-local-simapp
+          make -C contrib/images simd-env
       - name: start localnet
         run: |
           make clean localnet-start
