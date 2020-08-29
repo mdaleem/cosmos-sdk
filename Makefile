@@ -400,7 +400,13 @@ build-docker-local-simapp:
 
 # Run a 4-node testnet locally
 localnet-start: build-simd-linux localnet-stop
-	@if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/simd:Z cosmos-sdk/simapp testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
+	if ! [ -f build/node0/simd/config/genesis.json ]; then docker run --rm \
+		--user $(shell id -u):$(shell id -g) \
+		-v $(BUILDDIR):/simd:Z \
+		-v /etc/group:/etc/group:ro \
+		-v /etc/passwd:/etc/passwd:ro \
+		-v /etc/shadow:/etc/shadow:ro \
+		cosmos-sdk/simapp testnet --v 4 -o . --starting-ip-address 192.168.10.2 --keyring-backend=test ; fi
 	docker-compose up -d
 
 localnet-stop:
