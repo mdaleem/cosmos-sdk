@@ -221,7 +221,7 @@ jobs:
         with:
           repository: cosmossdk/simd-env
           username: tenderbot
-          password: ${{ TENDERBOT_TOKEN }}
+          password: ${{ secrets.TENDERBOT_TOKEN }}
           dockerfile: contrib/images/simd-env/Dockerfile
       - name: start localnet
         run: |
