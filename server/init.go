@@ -8,11 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var x int = 5
+
 // GenerateCoinKey returns the address of a public key, along with the secret
 // phrase to recover the private key.
 func GenerateCoinKey(algo keyring.SignatureAlgo) (sdk.AccAddress, string, error) {
 	// generate a private key, with recovery phrase
 	info, secret, err := keyring.NewInMemory().NewMnemonic("name", keyring.English, sdk.FullFundraiserPath, algo)
+	x += 1
 	if err != nil {
 		return sdk.AccAddress([]byte{}), "", err
 	}
