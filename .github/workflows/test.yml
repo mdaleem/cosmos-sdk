@@ -216,11 +216,9 @@ jobs:
             .go
             .mod
             .sum
-      - name: build image
-        run: |
-          make -C contrib/images simd-env
       - name: start localnet
         run: |
+          make -C contrib/images simd-env
           make clean localnet-start
         if: "env.GIT_DIFF != ''"
       - name: test liveness
