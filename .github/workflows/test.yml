@@ -216,9 +216,13 @@ jobs:
             .go
             .mod
             .sum
-      - name: build image
-        run: |
-          make -C contrib/images simd-env
+      - name: build and push image
+        uses: docker/build-push-action@v1.1.0
+        with:
+          repository: cosmossdk/simd-env
+          username: tenderbot
+          password: ${{ TENDERBOT_TOKEN }}
+          dockerfile: contrib/images/simd-env/Dockerfile
       - name: start localnet
         run: |
           make clean localnet-start
