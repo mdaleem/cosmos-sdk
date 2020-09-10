@@ -598,7 +598,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegatorWithdrawAddress() {
 
 			if testCase.expPass {
 				suite.Require().NoError(err)
-				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1])
+				suite.Require().Equal(withdrawAddress.WithdrawAddress, addrs[1].String())
 			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(withdrawAddress)
