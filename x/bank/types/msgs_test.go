@@ -151,8 +151,8 @@ func TestOutputValidation(t *testing.T) {
 		{"", NewOutput(addr2, someCoins)},
 		{"", NewOutput(addr2, multiCoins)},
 
-		{"Invalid output address (incorrect address length (expected: 20, actual: 0)): invalid address", NewOutput(addrEmpty, someCoins)},
-		{"Invalid output address (incorrect address length (expected: 20, actual: 33)): invalid address", NewOutput(addrTooLong, someCoins)},
+		{"empty address string is not allowed", NewOutput(addrEmpty, someCoins)},
+		{"incorrect address length (expected: 20, actual: 33)", NewOutput(addrTooLong, someCoins)},
 		{": invalid coins", NewOutput(addr1, emptyCoins)},                // invalid coins
 		{": invalid coins", NewOutput(addr1, emptyCoins2)},               // invalid coins
 		{"10eth,0atom: invalid coins", NewOutput(addr1, someEmptyCoins)}, // invalid coins
@@ -240,14 +240,14 @@ func TestMsgMultiSendGetSignBytes(t *testing.T) {
 func TestMsgMultiSendGetSigners(t *testing.T) {
 	var msg = MsgMultiSend{
 		Inputs: []Input{
-			NewInput(sdk.AccAddress([]byte("input1")), nil),
-			NewInput(sdk.AccAddress([]byte("input2")), nil),
-			NewInput(sdk.AccAddress([]byte("input3")), nil),
+			NewInput(sdk.AccAddress([]byte("______input1________")), nil),
+			NewInput(sdk.AccAddress([]byte("______input2________")), nil),
+			NewInput(sdk.AccAddress([]byte("______input3________")), nil),
 		},
 	}
 	res := msg.GetSigners()
 	// TODO: fix this !
-	require.Equal(t, fmt.Sprintf("%v", res), "[696E70757431 696E70757432 696E70757433]")
+	require.Equal(t, fmt.Sprintf("%v", res), "[5F5F5F5F5F5F696E707574315F5F5F5F5F5F5F5F 5F5F5F5F5F5F696E707574325F5F5F5F5F5F5F5F 5F5F5F5F5F5F696E707574335F5F5F5F5F5F5F5F]")
 }
 
 /*

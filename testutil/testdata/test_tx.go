@@ -32,7 +32,7 @@ func NewTestMsg(addrs ...sdk.AccAddress) *TestMsg {
 	var accAddresses []string
 	i := 0
 	for _, addr := range addrs {
-		accAddresses[i]=addr.String()
+		accAddresses[i] = addr.String()
 	}
 	return &TestMsg{
 		Signers: accAddresses,

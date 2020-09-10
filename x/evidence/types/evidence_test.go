@@ -16,18 +16,18 @@ func TestEquivocation_Valid(t *testing.T) {
 		Height:           100,
 		Time:             n,
 		Power:            1000000,
-		ConsensusAddress: sdk.ConsAddress("foo").String(),
+		ConsensusAddress: sdk.ConsAddress("__________foo_______").String(),
 	}
 
 	require.Equal(t, e.GetTotalPower(), int64(0))
 	require.Equal(t, e.GetValidatorPower(), e.Power)
 	require.Equal(t, e.GetTime(), e.Time)
-	require.Equal(t, e.GetConsensusAddress(), e.ConsensusAddress)
+	require.Equal(t, e.GetConsensusAddress().String(), e.ConsensusAddress)
 	require.Equal(t, e.GetHeight(), e.Height)
 	require.Equal(t, e.Type(), types.TypeEquivocation)
 	require.Equal(t, e.Route(), types.RouteEquivocation)
-	require.Equal(t, e.Hash().String(), "16337536D55FB6DB93360AED8FDB9B615BFACAF0440C28C46B89F167D042154A")
-	require.Equal(t, e.String(), "height: 100\ntime: 2006-01-02T15:04:05Z\npower: 1000000\nconsensus_address: cosmosvalcons1vehk7pqt5u4\n")
+	require.Equal(t, e.Hash().String(), "1ECFBCF3081A428FC28F3175595BC780DFD41499D880BCA69C2B33EBB1EDC186")
+	require.Equal(t, e.String(), "height: 100\ntime: 2006-01-02T15:04:05Z\npower: 1000000\nconsensus_address: cosmosvalcons1ta047h6lta047h6lvehk7h6lta047h6lyp568c\n")
 	require.NoError(t, e.ValidateBasic())
 }
 
