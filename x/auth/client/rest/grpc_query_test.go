@@ -19,14 +19,30 @@ func (s *IntegrationTestSuite) TestAuthAccountsGRPCHandler() {
 	addressBase64 := base64.URLEncoding.EncodeToString(val.Address)
 	fmt.Println(addressBase64)
 	testCases := []struct {
-		name     string
-		url      string
-		respType proto.Message
-		expected proto.Message
+		name      string
+		url       string
+		expectErr bool
+		respType  proto.Message
+		expected  proto.Message
 	}{
+		{
+			"test GRPC account invalid address",
+			fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", baseURL, "invalid"),
+			true,
+			&types.QueryAccountResponse{},
+			&types.QueryAccountResponse{},
+		},
+		{
+			"test GRPC account empty address",
+			fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", baseURL, ""),
+			true,
+			&types.QueryAccountResponse{},
+			&types.QueryAccountResponse{},
+		},
 		{
 			"test GRPC params",
 			fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", baseURL, addressBase64),
+			false,
 			&types.QueryAccountResponse{},
 			&types.QueryAccountResponse{
 				Account: nil,
@@ -39,9 +55,13 @@ func (s *IntegrationTestSuite) TestAuthAccountsGRPCHandler() {
 		s.Run(tc.name, func() {
 			resp, err := rest.GetRequest(tc.url)
 			s.Require().NoError(err)
-			fmt.Println(string(resp))
-			s.Require().NoError(val.ClientCtx.LegacyAmino.UnmarshalJSON(resp, tc.respType))
-			// s.Require().Equal(tc.expected.String(), tc.respType.String())
+			err = val.ClientCtx.JSONMarshaler.UnmarshalJSON(resp, tc.respType)
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				fmt.Println(string(resp))
+				s.Require().NoError(err)
+			}
 		})
 	}
 }
