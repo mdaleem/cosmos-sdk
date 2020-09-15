@@ -40,7 +40,7 @@ func (s *IntegrationTestSuite) TestAuthAccountsGRPCHandler() {
 			&types.QueryAccountResponse{},
 		},
 		{
-			"test GRPC params",
+			"test GRPC params valid address",
 			fmt.Sprintf("%s/cosmos/auth/v1beta1/accounts/%s", baseURL, addressBase64),
 			false,
 			&types.QueryAccountResponse{},
@@ -59,7 +59,6 @@ func (s *IntegrationTestSuite) TestAuthAccountsGRPCHandler() {
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
-				fmt.Println(string(resp))
 				s.Require().NoError(err)
 			}
 		})
