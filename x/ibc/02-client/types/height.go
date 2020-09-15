@@ -12,6 +12,11 @@ import (
 
 var _ exported.Height = (*Height)(nil)
 
+// ZeroHeight is a helper function which returns an uninitialized height.
+func ZeroHeight() Height {
+	return Height{}
+}
+
 // NewHeight is a constructor for the IBC height type
 func NewHeight(epochNumber, epochHeight uint64) Height {
 	return Height{
@@ -107,6 +112,17 @@ func (h Height) Increment() Height {
 // IsZero returns true if height epoch and epoch-height are both 0
 func (h Height) IsZero() bool {
 	return h.EpochNumber == 0 && h.EpochHeight == 0
+}
+
+// MustParseHeight will attempt to parse a string representation of a height and panic if
+// parsing fails.
+func MustParseHeight(heightStr string) Height {
+	height, err := ParseHeight(heightStr)
+	if err != nil {
+		panic(err)
+	}
+
+	return height
 }
 
 // ParseHeight is a utility function that takes a string representation of the height

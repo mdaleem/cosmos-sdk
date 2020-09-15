@@ -22,7 +22,6 @@ func (h Header) ClientType() exported.ClientType {
 // ConsensusState returns the updated consensus state associated with the header
 func (h Header) ConsensusState() *ConsensusState {
 	return &ConsensusState{
-		Height:             h.GetHeight().(clienttypes.Height),
 		Timestamp:          h.GetTime(),
 		Root:               commitmenttypes.NewMerkleRoot(h.Header.GetAppHash()),
 		NextValidatorsHash: h.Header.NextValidatorsHash,
@@ -35,7 +34,7 @@ func (h Header) ConsensusState() *ConsensusState {
 // TODO: return clienttypes.Height once interface changes
 func (h Header) GetHeight() exported.Height {
 	if h.Header == nil {
-		return clienttypes.Height{}
+		return clienttypes.ZeroHeight()
 	}
 
 	// Enforce clienttypes.Height to use 0 epoch number

@@ -18,13 +18,6 @@ func (ConsensusState) ClientType() exported.ClientType {
 	return exported.SoloMachine
 }
 
-// GetHeight returns the sequence number.
-// Return clientexported.Height to satisfy interface
-// Epoch number is always 0 for a solo-machine
-func (cs ConsensusState) GetHeight() exported.Height {
-	return clienttypes.NewHeight(0, cs.Sequence)
-}
-
 // GetTimestamp returns zero.
 func (cs ConsensusState) GetTimestamp() uint64 {
 	return cs.Timestamp
@@ -47,9 +40,6 @@ func (cs ConsensusState) GetPubKey() tmcrypto.PubKey {
 
 // ValidateBasic defines basic validation for the solo machine consensus state.
 func (cs ConsensusState) ValidateBasic() error {
-	if cs.Sequence == 0 {
-		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "sequence cannot be 0")
-	}
 	if cs.Timestamp == 0 {
 		return sdkerrors.Wrap(clienttypes.ErrInvalidConsensus, "timestamp cannot be 0")
 	}

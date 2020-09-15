@@ -3,9 +3,14 @@ package types_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 )
+
+func TestZeroHeight(t *testing.T) {
+	require.Equal(t, types.Height{}, types.ZeroHeight())
+}
 
 func TestCompareHeights(t *testing.T) {
 	testCases := []struct {
@@ -50,7 +55,7 @@ func TestDecrement(t *testing.T) {
 	invalidDecrement := types.NewHeight(3, 0)
 	actual, success = invalidDecrement.Decrement()
 
-	require.Equal(t, types.Height{}, actual, "invalid decrement returned non-zero height: %s", actual)
+	require.Equal(t, types.ZeroHeight(), actual, "invalid decrement returned non-zero height: %s", actual)
 	require.False(t, success, "invalid decrement passed")
 }
 
@@ -73,4 +78,18 @@ func TestString(t *testing.T) {
 	parse, err := types.ParseHeight("3-10")
 	require.NoError(t, err, "parse err")
 	require.Equal(t, types.NewHeight(3, 10), parse, "parse height returns wrong height")
+}
+
+func (suite *TypesTestSuite) TestMustParseHeight() {
+	suite.Require().Panics(func() {
+		types.MustParseHeight("height")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("111-1")
+	})
+
+	suite.Require().NotPanics(func() {
+		types.MustParseHeight("0-0")
+	})
 }
