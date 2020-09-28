@@ -20,6 +20,9 @@ import (
 
 var _ exported.ClientState = (*ClientState)(nil)
 
+// Tendermint is used to indicate that the client uses the Tendermint Consensus Algorithm.
+const Tendermint string = "Tendermint"
+
 // NewClientState creates a new ClientState instance
 func NewClientState(
 	chainID string, trustLevel Fraction,
@@ -34,7 +37,7 @@ func NewClientState(
 		UnbondingPeriod:              ubdPeriod,
 		MaxClockDrift:                maxClockDrift,
 		LatestHeight:                 latestHeight,
-		FrozenHeight:                 clienttypes.Height{},
+		FrozenHeight:                 clienttypes.ZeroHeight(),
 		ProofSpecs:                   specs,
 		AllowUpdateAfterExpiry:       allowUpdateAfterExpiry,
 		AllowUpdateAfterMisbehaviour: allowUpdateAfterMisbehaviour,
@@ -47,8 +50,8 @@ func (cs ClientState) GetChainID() string {
 }
 
 // ClientType is tendermint.
-func (cs ClientState) ClientType() exported.ClientType {
-	return exported.Tendermint
+func (cs ClientState) ClientType() string {
+	return Tendermint
 }
 
 // GetLatestHeight returns latest block height.

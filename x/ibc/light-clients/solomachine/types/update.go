@@ -11,6 +11,8 @@ import (
 // CheckHeaderAndUpdateState checks if the provided header is valid and updates
 // the consensus state if appropriate. It returns an error if:
 // - the client or header provided are not parseable to solo machine types
+// - the header sequence does not match the current sequence
+// - the header timestamp is less than the consensus state timestamp
 // - the currently registered public key did not provide the update signature
 func (cs ClientState) CheckHeaderAndUpdateState(
 	ctx sdk.Context, cdc codec.BinaryMarshaler, clientStore sdk.KVStore,
@@ -34,10 +36,18 @@ func (cs ClientState) CheckHeaderAndUpdateState(
 // checkHeader checks if the Solo Machine update signature is valid.
 func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *Header) error {
 	// assert update sequence is current sequence
-	if header.Sequence != clientState.ConsensusState.Sequence {
+	if header.Sequence != clientState.Sequence {
 		return sdkerrors.Wrapf(
 			clienttypes.ErrInvalidHeader,
-			"sequence provided in the header does not match the client state sequence (%d != %d)", header.Sequence, clientState.ConsensusState.Sequence,
+			"header sequence does not match the client state sequence (%d != %d)", header.Sequence, clientState.Sequence,
+		)
+	}
+
+	// assert update timestamp is not less than current consensus state timestamp
+	if header.Timestamp < clientState.ConsensusState.Timestamp {
+		return sdkerrors.Wrapf(
+			clienttypes.ErrInvalidHeader,
+			"header timestamp is less than to the consensus state timestamp (%d < %d)", header.Timestamp, clientState.ConsensusState.Timestamp,
 		)
 	}
 
@@ -57,13 +67,13 @@ func checkHeader(cdc codec.BinaryMarshaler, clientState *ClientState, header *He
 // update the consensus state to the new public key and an incremented sequence
 func update(clientState *ClientState, header *Header) (*ClientState, *ConsensusState) {
 	consensusState := &ConsensusState{
-		// increment sequence number
-		Sequence:    clientState.ConsensusState.Sequence + 1,
 		PublicKey:   header.NewPublicKey,
 		Diversifier: header.NewDiversifier,
 		Timestamp:   header.Timestamp,
 	}
 
+	// increment sequence number
+	clientState.Sequence++
 	clientState.ConsensusState = consensusState
 	return clientState, consensusState
 }

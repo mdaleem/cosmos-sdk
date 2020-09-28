@@ -1,16 +1,13 @@
 package types_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	"github.com/cosmos/cosmos-sdk/x/ibc/light-clients/solomachine/types"
 )
 
 func (suite *SoloMachineTestSuite) TestConsensusState() {
 	consensusState := suite.solomachine.ConsensusState()
 
-	suite.Require().Equal(exported.SoloMachine, consensusState.ClientType())
-	suite.Require().Equal(uint64(0), consensusState.GetHeight().GetEpochNumber())
-	suite.Require().Equal(suite.solomachine.Sequence, consensusState.GetHeight().GetEpochHeight())
+	suite.Require().Equal(types.SoloMachine, consensusState.ClientType())
 	suite.Require().Equal(suite.solomachine.Time, consensusState.GetTimestamp())
 	suite.Require().Nil(consensusState.GetRoot())
 }
@@ -27,19 +24,8 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 			true,
 		},
 		{
-			"sequence is zero",
-			&types.ConsensusState{
-				Sequence:    0,
-				PublicKey:   suite.solomachine.ConsensusState().PublicKey,
-				Timestamp:   suite.solomachine.Time,
-				Diversifier: suite.solomachine.Diversifier,
-			},
-			false,
-		},
-		{
 			"timestamp is zero",
 			&types.ConsensusState{
-				Sequence:    suite.solomachine.Sequence,
 				PublicKey:   suite.solomachine.ConsensusState().PublicKey,
 				Timestamp:   0,
 				Diversifier: suite.solomachine.Diversifier,
@@ -49,7 +35,6 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 		{
 			"diversifier is blank",
 			&types.ConsensusState{
-				Sequence:    suite.solomachine.Sequence,
 				PublicKey:   suite.solomachine.ConsensusState().PublicKey,
 				Timestamp:   suite.solomachine.Time,
 				Diversifier: " ",
@@ -59,7 +44,6 @@ func (suite *SoloMachineTestSuite) TestConsensusStateValidateBasic() {
 		{
 			"pubkey is nil",
 			&types.ConsensusState{
-				Sequence:    suite.solomachine.Sequence,
 				Timestamp:   suite.solomachine.Time,
 				Diversifier: suite.solomachine.Diversifier,
 				PublicKey:   nil,

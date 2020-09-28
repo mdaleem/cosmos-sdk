@@ -3,7 +3,6 @@ package types_test
 import (
 	clienttypes "github.com/cosmos/cosmos-sdk/x/ibc/02-client/types"
 	"github.com/cosmos/cosmos-sdk/x/ibc/07-tendermint/types"
-	"github.com/cosmos/cosmos-sdk/x/ibc/exported"
 	ibctesting "github.com/cosmos/cosmos-sdk/x/ibc/testing"
 )
 
@@ -13,7 +12,7 @@ var (
 
 // sanity checks
 func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateStateBasic() {
-	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+	clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 	clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 	clientStore := suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
 
@@ -202,7 +201,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			suite.SetupTest() // reset
 
 			// construct client state based on test case parameters
-			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, _ := suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			clientState := suite.chainA.GetClientState(clientA).(*types.ClientState)
 			clientState.AllowUpdateAfterExpiry = tc.AllowUpdateAfterExpiry
 			clientState.AllowUpdateAfterMisbehaviour = tc.AllowUpdateAfterMisbehaviour
@@ -224,7 +223,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 
 			if tc.expPassUnfreeze {
 				suite.Require().NoError(err)
-				suite.Require().Equal(clienttypes.Height{}, cs.GetFrozenHeight())
+				suite.Require().Equal(clienttypes.ZeroHeight(), cs.GetFrozenHeight())
 				suite.Require().NotNil(consState)
 			} else {
 				suite.Require().Error(err)
@@ -236,7 +235,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeaderAndUpdateState() {
 			// and validators. Update chainB time so header won't be expired.
 			unexpireClientHeader, err := suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
 			suite.Require().NoError(err)
-			unexpireClientHeader.TrustedHeight = clienttypes.Height{}
+			unexpireClientHeader.TrustedHeight = clienttypes.ZeroHeight()
 			unexpireClientHeader.TrustedValidators = nil
 
 			clientStore = suite.chainA.App.IBCKeeper.ClientKeeper.ClientStore(suite.chainA.GetContext(), clientA)
@@ -320,7 +319,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest() // reset
 
-			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, exported.Tendermint)
+			clientA, _ = suite.coordinator.SetupClients(suite.chainA, suite.chainB, ibctesting.Tendermint)
 			clientState = suite.chainA.GetClientState(clientA).(*types.ClientState)
 			clientState.AllowUpdateAfterExpiry = true
 			clientState.AllowUpdateAfterMisbehaviour = false
@@ -334,7 +333,7 @@ func (suite *TendermintTestSuite) TestCheckProposedHeader() {
 			// and validators.
 			header, err = suite.chainA.ConstructUpdateTMClientHeader(suite.chainB, clientA)
 			suite.Require().NoError(err)
-			header.TrustedHeight = clienttypes.Height{}
+			header.TrustedHeight = clienttypes.ZeroHeight()
 			header.TrustedValidators = nil
 
 			tc.malleate()
