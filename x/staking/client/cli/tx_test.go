@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/pflag"
@@ -135,6 +136,7 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			fmt.Println("CCCCCCCCCCCCCCCCCCCCCC")
 			fs, _ := CreateValidatorMsgFlagSet(ip)
 			fs.String(flags.FlagName, "", "name of private key with which to sign the gentx")
 

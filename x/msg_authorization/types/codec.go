@@ -10,25 +10,26 @@ import (
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the
 // governance module.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(MsgGrantAuthorization{}, "cosmos-sdk/GrantAuthorization", nil)
-	cdc.RegisterConcrete(MsgRevokeAuthorization{}, "cosmos-sdk/RevokeAuthorization", nil)
+	cdc.RegisterConcrete(MsgGrantCapability{}, "cosmos-sdk/GrantCapability", nil)
+	cdc.RegisterConcrete(MsgRevokeCapability{}, "cosmos-sdk/RevokeCapability", nil)
 	cdc.RegisterConcrete(MsgExecDelegated{}, "cosmos-sdk/ExecDelegated", nil)
-	cdc.RegisterConcrete(SendAuthorization{}, "cosmos-sdk/SendAuthorization", nil)
-	cdc.RegisterConcrete(GenericAuthorization{}, "cosmos-sdk/GenericAuthorization", nil)
+	cdc.RegisterConcrete(SendCapability{}, "cosmos-sdk/SendCapability", nil)
+	cdc.RegisterConcrete(GenericCapability{}, "cosmos-sdk/GenericCapability", nil)
 
-	cdc.RegisterInterface((*AuthorizationI)(nil), nil)
+	cdc.RegisterInterface((*CapabilityI)(nil), nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgGrantAuthorization{},
-		&MsgRevokeAuthorization{},
+		&MsgGrantCapability{},
+		&MsgRevokeCapability{},
 		&MsgExecDelegated{},
 	)
 	registry.RegisterInterface(
-		"cosmos.msg_authorization.v1beta1.AuthorizationI",
-		(*AuthorizationI)(nil),
-		&SendAuthorization{},
+		"cosmos.msg_authorization.v1beta1.CapabilityI",
+		(*CapabilityI)(nil),
+		&SendCapability{},
+		&GenericCapability{},
 	)
 }
 

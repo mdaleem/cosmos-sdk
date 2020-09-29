@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/aleem1314/github.com/aleem1314/cosmos-sdk/x/msg_authorization/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 // NewHandler creates an sdk.Handler for all the msg_authorization type messages

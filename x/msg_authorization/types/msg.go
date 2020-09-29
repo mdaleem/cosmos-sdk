@@ -11,40 +11,40 @@ import (
 )
 
 const (
-	TypeExecDelegate        = "exec_delegated"
-	TypeGrantAuthorization  = "grant_authorization"
-	TypeRevokeAuthorization = "revoke_authorization"
+	TypeExecDelegate     = "exec_delegated"
+	TypeGrantCapability  = "grant_capability"
+	TypeRevokeCapability = "revoke_capability"
 )
 
 var (
-	_ sdk.Msg = &MsgGrantAuthorization{}
-	_ sdk.Msg = &MsgRevokeAuthorization{}
+	_ sdk.Msg = &MsgGrantCapability{}
+	_ sdk.Msg = &MsgRevokeCapability{}
 	_ sdk.Msg = &MsgExecDelegated{}
 )
 
-func NewMsgGrantAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorization AuthorizationI, expiration time.Time) (*MsgGrantAuthorization, error) {
-	m := &MsgGrantAuthorization{
-		Granter:    granter,
-		Grantee:    grantee,
+func NewMsgGrantCapability(granter sdk.AccAddress, grantee sdk.AccAddress, capability CapabilityI, expiration time.Time) (*MsgGrantCapability, error) {
+	m := &MsgGrantCapability{
+		Granter:    granter.String(),
+		Grantee:    grantee.String(),
 		Expiration: expiration,
 	}
-	err := m.SetAuthorization(authorization)
+	err := m.SetCapability(capability)
 	if err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (m MsgGrantAuthorization) GetAuthorization() AuthorizationI {
-	authorization, ok := m.Authorization.GetCachedValue().(AuthorizationI)
+func (m MsgGrantCapability) GetCapability() CapabilityI {
+	capability, ok := m.Capability.GetCachedValue().(CapabilityI)
 	if !ok {
 		return nil
 	}
-	return authorization
+	return capability
 }
 
-func (m MsgGrantAuthorization) SetAuthorization(authorization AuthorizationI) error {
-	msg, ok := authorization.(proto.Message)
+func (m MsgGrantCapability) SetCapability(capability CapabilityI) error {
+	msg, ok := capability.(proto.Message)
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
 	}
@@ -52,28 +52,29 @@ func (m MsgGrantAuthorization) SetAuthorization(authorization AuthorizationI) er
 	if err != nil {
 		return err
 	}
-	m.Authorization = any
+	m.Capability = any
 	return nil
 }
 
-func (MsgGrantAuthorization) Route() string { return RouterKey }
-func (MsgGrantAuthorization) Type() string  { return TypeGrantAuthorization }
+func (MsgGrantCapability) Route() string { return RouterKey }
+func (MsgGrantCapability) Type() string  { return TypeGrantCapability }
 
-func (m MsgGrantAuthorization) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Granter}
+func (m MsgGrantCapability) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(m.Granter)
+	return []sdk.AccAddress{granter}
 }
 
-func (m MsgGrantAuthorization) GetSignBytes() []byte {
+func (m MsgGrantCapability) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&m)
 	return sdk.MustSortJSON(bz)
 }
 
-func (m MsgGrantAuthorization) ValidateBasic() error {
-	if m.Granter.Empty() {
-		return sdkerrors.Wrap(ErrInvalidGranter, " Granter address is missing")
+func (m MsgGrantCapability) ValidateBasic() error {
+	if m.Granter == "" {
+		return sdkerrors.Wrap(ErrInvalidGranter, " Granter address is empty")
 	}
-	if m.Grantee.Empty() {
-		return sdkerrors.Wrap(ErrInvalidGrantee, " Grantee address is missing")
+	if m.Grantee == "" {
+		return sdkerrors.Wrap(ErrInvalidGrantee, " Grantee address is empty")
 	}
 	if m.Expiration.Unix() < time.Now().Unix() {
 		return sdkerrors.Wrap(ErrInvalidExpirationTime, " Time can't be in the past")
@@ -82,56 +83,33 @@ func (m MsgGrantAuthorization) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRevokeAuthorization(granter sdk.AccAddress, grantee sdk.AccAddress, authorizationMsgType sdk.Msg) (*MsgRevokeAuthorization, error) {
-	m := &MsgRevokeAuthorization{
-		Granter: granter,
-		Grantee: grantee,
+func NewMsgRevokeCapability(granter sdk.AccAddress, grantee sdk.AccAddress, msgType string) *MsgRevokeCapability {
+	m := &MsgRevokeCapability{
+		Granter:           granter.String(),
+		Grantee:           grantee.String(),
+		CapabilityMsgType: msgType,
 	}
-	err := m.SetMsgType(authorizationMsgType)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
+	return m
 }
 
-func (msg MsgRevokeAuthorization) SetMsgType(msgType sdk.Msg) error {
-	m, ok := msgType.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", m)
-	}
-	any, err := types.NewAnyWithValue(m)
-	if err != nil {
-		return err
-	}
-	msg.AuthorizationMsgType = any
-	return nil
+func (msg MsgRevokeCapability) Route() string { return RouterKey }
+func (msg MsgRevokeCapability) Type() string  { return TypeRevokeCapability }
+
+func (msg MsgRevokeCapability) GetSigners() []sdk.AccAddress {
+	granter, _ := sdk.AccAddressFromBech32(msg.Granter)
+	return []sdk.AccAddress{granter}
 }
 
-func (msg MsgRevokeAuthorization) GetMsgType() sdk.Msg {
-	msgType, ok := msg.AuthorizationMsgType.GetCachedValue().(sdk.Msg)
-	if !ok {
-		return nil
-	}
-	return msgType
-}
-
-func (msg MsgRevokeAuthorization) Route() string { return RouterKey }
-func (msg MsgRevokeAuthorization) Type() string  { return TypeRevokeAuthorization }
-
-func (msg MsgRevokeAuthorization) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{msg.Granter}
-}
-
-func (msg MsgRevokeAuthorization) GetSignBytes() []byte {
+func (msg MsgRevokeCapability) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg MsgRevokeAuthorization) ValidateBasic() error {
-	if msg.Granter.Empty() {
+func (msg MsgRevokeCapability) ValidateBasic() error {
+	if msg.Granter == "" {
 		return ErrEmptyGranter
 	}
-	if msg.Grantee.Empty() {
+	if msg.Grantee == "" {
 		return ErrEmptyGrantee
 	}
 	return nil
@@ -139,7 +117,7 @@ func (msg MsgRevokeAuthorization) ValidateBasic() error {
 
 func NewMsgExecDelegated(grantee sdk.AccAddress, msgs []sdk.Msg) (*MsgExecDelegated, error) {
 	m := &MsgExecDelegated{
-		Grantee: grantee,
+		Grantee: grantee.String(),
 	}
 	err := m.SetMsgs(msgs)
 	if err != nil {
@@ -180,7 +158,8 @@ func (MsgExecDelegated) Route() string { return RouterKey }
 func (MsgExecDelegated) Type() string  { return TypeExecDelegate }
 
 func (m MsgExecDelegated) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{m.Grantee}
+	grantee, _ := sdk.AccAddressFromBech32(m.Grantee)
+	return []sdk.AccAddress{grantee}
 }
 
 func (m MsgExecDelegated) GetSignBytes() []byte {
@@ -189,7 +168,7 @@ func (m MsgExecDelegated) GetSignBytes() []byte {
 }
 
 func (m MsgExecDelegated) ValidateBasic() error {
-	if m.Grantee.Empty() {
+	if m.Grantee == "" {
 		return sdkerrors.Wrap(ErrInvalidGrantee, " Grantee address is empty")
 	}
 	return nil

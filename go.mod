@@ -50,3 +50,5 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.2-alpha.regen.4
+
+replace github.com/cosmos/cosmos-sdk/x/msg_authorization/ => /home/system-27/go/src/github.com/aleem1314/cosmos-sdk/x/msg_authorization/

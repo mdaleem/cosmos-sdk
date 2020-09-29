@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 	"github.com/spf13/cobra"
@@ -62,7 +63,7 @@ func GetCmdGrantAuthorization(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgGrantAuthorization(granter, grantee, authorization, expiration)
+			msg := types.NewMsgGrantCapability(granter, grantee, authorization, expiration)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

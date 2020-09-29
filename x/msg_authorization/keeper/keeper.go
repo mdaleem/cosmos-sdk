@@ -3,12 +3,14 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
+	proto "github.com/gogo/protobuf/proto"
 )
 
 type Keeper struct {
@@ -26,11 +28,11 @@ func NewKeeper(storeKey sdk.StoreKey, cdc codec.BinaryMarshaler, router sdk.Rout
 	}
 }
 
-func (k Keeper) getActorAuthorizationKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
+func (k Keeper) getActorCapabilityKey(grantee sdk.AccAddress, granter sdk.AccAddress, msg sdk.Msg) []byte {
 	return []byte(fmt.Sprintf("c/%x/%x/%s/%s", grantee, granter, msg.Route(), msg.Type()))
 }
 
-func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant types.AuthorizationGrant, found bool) {
+func (k Keeper) getCapabilityGrant(ctx sdk.Context, actor []byte) (grant types.CapabilityGrant, found bool) {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(actor)
 	if bz == nil {
@@ -40,20 +42,24 @@ func (k Keeper) getAuthorizationGrant(ctx sdk.Context, actor []byte) (grant type
 	return grant, true
 }
 
-func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated *codectypes.Any) {
-	var authorization types.AuthorizationI
-	err := k.cdc.UnpackAny(updated, &authorization)
-	if err != nil {
-		return
-	}
-
-	actor := k.getActorAuthorizationKey(grantee, granter, authorization.MsgType())
-	grant, found := k.getAuthorizationGrant(ctx, actor)
+func (k Keeper) update(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, updated types.CapabilityI) {
+	actor := k.getActorCapabilityKey(grantee, granter, updated.MsgType())
+	grant, found := k.getCapabilityGrant(ctx, actor)
 	if !found {
 		return
 	}
 
-	grant.Authorization = updated
+	msg, ok := updated.(proto.Message)
+	if !ok {
+		panic(fmt.Errorf("cannot proto marshal %T", updated))
+	}
+
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+
+	grant.Capability = any
 	store := ctx.KVStore(k.storeKey)
 	store.Set(actor, k.cdc.MustMarshalBinaryBare(&grant))
 }
@@ -70,13 +76,13 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 		}
 		granter := signers[0]
 		if !bytes.Equal(granter, grantee) {
-			authorization, _ := k.GetAuthorization(ctx, grantee, granter, msg)
-			if authorization == nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "authorization not found")
+			capability, _ := k.GetCapability(ctx, grantee, granter, msg)
+			if capability == nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
-			allow, updated, del := authorization.Accept(msg, ctx.BlockHeader())
+			allow, updated, del := capability.Accept(msg, ctx.BlockHeader())
 			if !allow {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, " ")
+				return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "authorization not found")
 			}
 			if del {
 				k.Revoke(ctx, grantee, granter, msg)
@@ -101,38 +107,35 @@ func (k Keeper) DispatchActions(ctx sdk.Context, grantee sdk.AccAddress, msgs []
 // Grant method grants the provided authorization to the grantee on the granter's account with the provided expiration
 // time. If there is an existing authorization grant for the same `sdk.Msg` type, this grant
 // overwrites that.
-func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, authorization *codectypes.Any, expiration int64) {
+func (k Keeper) Grant(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, capability types.CapabilityI, expiration time.Time) {
 	store := ctx.KVStore(k.storeKey)
-
-	var authorization1 types.AuthorizationI
-	err := k.cdc.UnpackAny(authorization, &authorization1)
+	grant, err := types.NewGrantCapability(capability, expiration.Unix())
 	if err != nil {
-		return
+		sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "authorization can not be given to msg")
 	}
-
-	bz := k.cdc.MustMarshalBinaryBare(&types.AuthorizationGrant{Authorization: authorization, Expiration: expiration})
-	actor := k.getActorAuthorizationKey(grantee, granter, authorization1.MsgType())
+	bz := k.cdc.MustMarshalBinaryBare(grant)
+	actor := k.getActorCapabilityKey(grantee, granter, capability.MsgType())
 	store.Set(actor, bz)
 
 }
 
-// Revoke method revokes any authorization for the provided message type granted to the grantee by the granter.
+// Revoke method revokes any capability for the provided message type granted to the grantee by the granter.
 func (k Keeper) Revoke(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) error {
 	store := ctx.KVStore(k.storeKey)
-	actor := k.getActorAuthorizationKey(grantee, granter, msgType)
-	_, found := k.getAuthorizationGrant(ctx, actor)
+	actor := k.getActorCapabilityKey(grantee, granter, msgType)
+	_, found := k.getCapabilityGrant(ctx, actor)
 	if !found {
-		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "authorization not found")
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "capability not found")
 	}
 	store.Delete(actor)
 
 	return nil
 }
 
-// GetAuthorization Returns any `Authorization` (or `nil`), with the expiration time,
+// GetCapability Returns any `Capability` (or `nil`), with the expiration time,
 // granted to the grantee by the granter for the provided msg type.
-func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.AuthorizationI, expiration int64) {
-	grant, found := k.getAuthorizationGrant(ctx, k.getActorAuthorizationKey(grantee, granter, msgType))
+func (k Keeper) GetCapability(ctx sdk.Context, grantee sdk.AccAddress, granter sdk.AccAddress, msgType sdk.Msg) (cap types.CapabilityI, expiration int64) {
+	grant, found := k.getCapabilityGrant(ctx, k.getActorCapabilityKey(grantee, granter, msgType))
 	if !found {
 		return nil, 0
 	}
@@ -142,11 +145,11 @@ func (k Keeper) GetAuthorization(ctx sdk.Context, grantee sdk.AccAddress, grante
 		return nil, 0
 	}
 
-	var authorization types.AuthorizationI
-	err := k.cdc.UnpackAny(grant.Authorization, &authorization)
+	var capability types.CapabilityI
+	err := k.cdc.UnpackAny(grant.Capability, &capability)
 	if err != nil {
 		return nil, 0
 	}
 
-	return authorization, grant.Expiration
+	return capability, grant.Expiration
 }

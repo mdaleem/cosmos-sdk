@@ -1,0 +1,43 @@
+syntax = "proto3";
+package cosmos.msg_authorization.v1beta1;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/msg_authorization/types";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+
+
+// MsgGrantCapability grants the provided authorization to the grantee on the granter's
+// account with the provided expiration time.
+message MsgGrantCapability {
+  option (gogoproto.goproto_getters) = false;
+  string granter = 1;
+  string grantee = 2;
+  google.protobuf.Any capability = 3 [(cosmos_proto.accepts_interface) = "CapabilityI"];
+
+  google.protobuf.Timestamp expiration              = 4 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+
+}
+
+// MsgRevokeCapability revokes any authorization with the provided sdk.Msg type on the
+// granter's account with that has been granted to the grantee.
+message MsgRevokeCapability {
+  option (gogoproto.goproto_getters) = false;
+
+  string granter = 1;
+  string grantee = 2;
+  string capability_msg_type = 3;
+}
+
+// MsgExecDelegated attempts to execute the provided messages using
+// authorizations granted to the grantee. Each message should have only
+// one signer corresponding to the granter of the authorization.
+message MsgExecDelegated {
+  string grantee = 1;
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "guthub.com/cosmos/cosmos-sdk/types.Msg",
+  (gogoproto.moretags) = "yaml:\"msgs\""
+  ];
+}

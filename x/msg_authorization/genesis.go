@@ -2,8 +2,7 @@ package msg_authorization
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/aleem1314/github.com/aleem1314/cosmos-sdk/x/msg_authorization/types"
+	"github.com/cosmos/cosmos-sdk/x/msg_authorization/types"
 )
 
 // InitGenesis initialize default parameters
